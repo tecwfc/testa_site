@@ -565,6 +565,10 @@
                 <span class="hidden xs:inline">Gerenciar</span>
             </div>
             <div class="btn-group">
+                <button onclick="abrirModal('modalUsuarios')"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl font-bold text-xs shadow hover:shadow-lg transition flex items-center gap-1 justify-center">
+                    <i class="fas fa-users"></i> <span class="hidden xs:inline">Usuários</span>
+                </button>
                 <button onclick="abrirModal('modalConfig')"
                     class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-xl font-bold text-xs shadow hover:shadow-lg transition flex items-center gap-1 justify-center">
                     <i class="fas fa-sliders"></i> <span class="hidden xs:inline">Config</span>
@@ -672,6 +676,7 @@
                 </table>
             </div>
         </div>
+     
     </main>
 
     <!-- ========================================== -->
@@ -839,6 +844,85 @@
             </div>
         </div>
     </div>
+
+            <!-- ========================================== -->
+    <!-- MODAL USUÁRIOS -->
+    <!-- ========================================== -->
+    <div id="modalUsuarios" class="modal-overlay">
+        <div class="modal-content modal-content-config" onclick="event.stopPropagation()">
+            <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center text-white sticky top-0 z-10">
+                <h3 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-users"></i> Gerenciar Usuários
+                </h3>
+                <button onclick="fecharModal('modalUsuarios')" class="text-white/80 hover:text-white text-xl transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto" style="max-height: calc(95vh - 60px);">
+
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs text-indigo-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Adicione, edite ou remova usuários. Cada um pode acessar o painel com seu email e senha.
+                    </p>
+                </div>
+
+                <!-- LISTA DE USUÁRIOS -->
+                <div id="usuarios-list" class="space-y-2 mb-6"></div>
+
+                <hr class="my-4">
+
+                <!-- FORM -->
+                <h4 class="font-bold text-gray-700 mb-3 text-sm" id="usuarioFormTitle">➕ Adicionar Usuário</h4>
+                <input type="hidden" id="usuarioEditIndex" value="-1">
+
+                <form id="formUsuario" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="col-span-full">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Email *</label>
+                        <input type="email" id="usuarioEmail" required
+                            class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="usuario@ivopita.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Senha *</label>
+                        <input type="text" id="usuarioSenha" required
+                            class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                            placeholder="senha123">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nome</label>
+                        <input type="text" id="usuarioNome"
+                            class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Ex: Maria Silva">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nível</label>
+                        <select id="usuarioNivel"
+                            class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="admin">Admin (acesso total)</option>
+                            <option value="vendedor">Vendedor</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="usuarioAtivo" checked
+                            class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <label class="text-sm font-medium text-gray-700">Ativo (pode fazer login)</label>
+                    </div>
+                    <div class="col-span-full flex justify-end gap-2 border-t pt-3">
+                        <button type="button" onclick="cancelarEdicaoUsuario()"
+                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="btnSalvarUsuario"
+                            class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 text-sm shadow">
+                            <i class="fas fa-plus mr-2"></i><span id="btnSalvarUsuarioText">Adicionar</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <!-- ========================================== -->
     <!-- MODAL CONFIGURAÇÕES DO SITE -->
@@ -1599,6 +1683,13 @@
                         params += `&marquee=${encodeURIComponent(JSON.stringify(dados.marquee || {}))}`;
                     } else if (tipo === 'salvar_config') {
                         params += `&config=${encodeURIComponent(JSON.stringify(dados.config || {}))}`;
+                    
+                    } else if (tipo === 'listar_usuarios') {
+                  
+                    } else if (tipo === 'salvar_usuario') {
+                        params += `&usuario=${encodeURIComponent(JSON.stringify(dados.usuario || {}))}`;
+                    } else if (tipo === 'excluir_usuario') {
+                        params += `&index=${dados.index}`;
                     }
 
                     const script = document.createElement('script');
@@ -2337,7 +2428,7 @@
         // ============================================
         // MODAIS
         // ============================================
-        function abrirModal(tipo) {
+               function abrirModal(tipo) {
             if (tipo === 'modalProduto') {
                 document.getElementById('modalProdutoTitle').innerText = "Adicionar Produto";
                 document.getElementById('formProduto').reset();
@@ -2364,12 +2455,16 @@
                 document.getElementById('modalConfig').classList.add('active');
                 document.body.style.overflow = 'hidden';
                 preencherFormConfig(siteConfig);
+            } else if (tipo === 'modalUsuarios') {
+                document.getElementById('modalUsuarios').classList.add('active');
+                document.body.style.overflow = 'hidden';
+                renderizarUsuariosAdmin();
             } else {
                 document.getElementById('modalBanner').classList.add('active');
                 document.body.style.overflow = 'hidden';
                 renderizarBanners();
             }
-        }
+        }   
 
         function fecharModal(id) {
             document.getElementById(id).classList.remove('active');
@@ -2580,6 +2675,159 @@
                 document.body.style.overflow = 'auto';
             }
         });
+
+
+                // ============================================
+        // USUÁRIOS — LISTAR / RENDERIZAR
+        // ============================================
+        let usuariosCache = [];
+
+        async function carregarUsuarios() {
+            try {
+                const result = await chamarAPI('listar_usuarios');
+                if (result.success) {
+                    usuariosCache = result.usuarios || [];
+                    return usuariosCache;
+                }
+                console.error('Erro ao listar usuários:', result.error);
+                return [];
+            } catch (e) {
+                console.error('Erro:', e);
+                return [];
+            }
+        }
+
+        function renderizarUsuariosAdmin() {
+            const container = document.getElementById('usuarios-list');
+            if (!container) return;
+            container.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>';
+
+            carregarUsuarios().then(usuarios => {
+                container.innerHTML = '';
+
+                if (!usuarios || usuarios.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">Nenhum usuário cadastrado. Adicione o primeiro abaixo 👇</p>';
+                    return;
+                }
+
+                usuarios.forEach((u) => {
+                    const ativo = u.ativo;
+                    const nivelLabel = u.nivel === 'admin' ? '🔴 Admin' : '🔵 Vendedor';
+                    const div = document.createElement('div');
+                    div.className = "flex items-center justify-between bg-gray-50 p-3 rounded-lg border flex-wrap gap-2";
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-user text-indigo-600"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-bold text-sm truncate">${u.nome || '(sem nome)'} ${!ativo ? '<span class="text-red-500 text-[10px]">(inativo)</span>' : ''}</p>
+                                <p class="text-[10px] text-gray-500 truncate">${u.email} • ${nivelLabel}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-1 flex-shrink-0">
+                            <button onclick="editarUsuario(${u.index})" class="text-blue-600 hover:text-blue-800 p-2 rounded" title="Editar">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button onclick="excluirUsuario(${u.index})" class="text-red-500 hover:text-red-700 p-2 rounded" title="Excluir">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function editarUsuario(index) {
+            const u = usuariosCache.find(x => x.index === index);
+            if (!u) return;
+
+            document.getElementById('usuarioEditIndex').value = index;
+            document.getElementById('usuarioEmail').value = u.email || '';
+            document.getElementById('usuarioSenha').value = u.senha || '';
+            document.getElementById('usuarioNome').value = u.nome || '';
+            document.getElementById('usuarioNivel').value = u.nivel || 'vendedor';
+            document.getElementById('usuarioAtivo').checked = u.ativo;
+
+            document.getElementById('usuarioFormTitle').innerText = '✏️ Editando usuário';
+            document.getElementById('btnSalvarUsuarioText').innerText = 'Salvar Edição';
+
+            document.getElementById('formUsuario').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cancelarEdicaoUsuario() {
+            document.getElementById('usuarioEditIndex').value = -1;
+            document.getElementById('formUsuario').reset();
+            document.getElementById('usuarioAtivo').checked = true;
+            document.getElementById('usuarioFormTitle').innerText = '➕ Adicionar Usuário';
+            document.getElementById('btnSalvarUsuarioText').innerText = 'Adicionar';
+        }
+        window.cancelarEdicaoUsuario = cancelarEdicaoUsuario;
+        window.editarUsuario = editarUsuario;
+
+        document.getElementById('formUsuario').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const indexEdit = parseInt(document.getElementById('usuarioEditIndex').value, 10);
+            const isEdit = indexEdit >= 0;
+
+            const usuario = {
+                email: document.getElementById('usuarioEmail').value.trim().toLowerCase(),
+                senha: document.getElementById('usuarioSenha').value.trim(),
+                nome: document.getElementById('usuarioNome').value.trim(),
+                nivel: document.getElementById('usuarioNivel').value,
+                ativo: document.getElementById('usuarioAtivo').checked
+            };
+
+            if (!usuario.email || !usuario.senha) {
+                alert('Email e senha são obrigatórios');
+                return;
+            }
+
+            if (isEdit) usuario.index = indexEdit;
+
+            const btn = document.getElementById('btnSalvarUsuario');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+
+            try {
+                const result = await chamarAPI('salvar_usuario', { usuario });
+                if (result.success) {
+                    alert(isEdit ? '✅ Usuário atualizado!' : '✅ Usuário adicionado!');
+                    cancelarEdicaoUsuario();
+                    setTimeout(() => renderizarUsuariosAdmin(), 800);
+                } else {
+                    alert('❌ Erro: ' + (result.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                alert('❌ Erro: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        };
+
+        async function excluirUsuario(index) {
+            if (!confirm('Excluir este usuário? Ele perderá o acesso ao painel.')) return;
+            try {
+                const result = await chamarAPI('excluir_usuario', { index });
+                if (result.success) {
+                    alert('✅ Usuário excluído!');
+                    if (parseInt(document.getElementById('usuarioEditIndex').value, 10) === index) {
+                        cancelarEdicaoUsuario();
+                    }
+                    setTimeout(() => renderizarUsuariosAdmin(), 800);
+                } else {
+                    alert('❌ Erro: ' + (result.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+        window.excluirUsuario = excluirUsuario;
+
 
         // ============================================
         // INICIALIZAÇÃO
